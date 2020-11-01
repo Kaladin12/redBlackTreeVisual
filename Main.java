@@ -20,7 +20,7 @@ public class Main {
         
         int n = 0; 
         for (int i = 0; i < 20; i++) {
-            n = randy.nextInt(100);
+            n = randy.nextInt(10500);
             ab.insertRecursive(n);
             System.out.println(n);
         }  

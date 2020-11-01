@@ -1,44 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-         .dot {
-        height: 50px;
-        width: 50px;
-        background-color: #bbb;
-        border-radius: 50%;
-        display: inline-block;
-        }
-        #svg{
-            position: absolute;
-            top:100px;
-            left:0;
-            width: 100%;
-            height: 100%;
-        }
-        #but{
-            position: absolute;
-        }
-    </style>
-</head>
-<body>
-    <div><form action="#" method="" name="b" id="but">
-        <input type="text" name = "text" id = "text" value="" />
-        <input type="button" name="inputButton" id="inputButton" value="Insert" onclick="clicked()"/>
-    </form></div>
-    <div id="main" > </div><svg id="svg">
-        <line id="myLine" x1="0" y1="0" x2="0" y2="0" style="stroke:black; stroke-width:2px;"/>
-    </svg>
-<script type="text/javascript">
-
-
-let main = document.getElementById("main");
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 class Node {
     constructor(value, next=null){
         this.value = value;
@@ -104,15 +63,8 @@ class Node {
     getLeftSon(){
         return this.leftSon;
     }
-    comparable(v){
-            if ((parseInt(this.value) - parseInt(v))>0){
-            return 1;
-            }
-            else if ((parseInt(this.value) - parseInt(v)<0)){
-                return -1;
-            }
-            return 0;
-        //return this.value>value ? 1: this.value<value? -1 : 0;
+    comparable(value){
+        return this.value>value ? 1: this.value<value?-1:0;
     }
     setItem(){
 
@@ -169,7 +121,6 @@ class Tree {
             nodeToInsert.setColor(true);
             return nodeToInsert;
         }
-        console.log(node.getValue(),nodeToInsert.getValue() , node.comparable(nodeToInsert.getValue()));
         if (node.comparable(nodeToInsert.getValue())>=0){
             node.setLeftSon(this.insertRecursive(node.getLeftSon(), nodeToInsert));
         }
@@ -178,7 +129,7 @@ class Tree {
         }
         let parent = this.getParent(this.root, nodeToInsert.getValue());
         nodeToInsert.setParent(parent);
-        console.log("Parent: ",parent);
+        //console.log("Parent: ",parent);
         return node;
     }
     getParent(node, value){
@@ -259,7 +210,6 @@ class Tree {
             }
             else{
                 if (left){
-                    console.log("Changes");
                     if (node == node.getParent().getRightSon()){
                         node = node.getParent();
                         this.rotateLeft(node);
@@ -269,7 +219,6 @@ class Tree {
                     this.rotateRight(node.getParent().getParent());
                 }
                 else{
-                    console.log("Changes");
                     if (node == node.getParent().getLeftSon()){
                         node = node.getParent();
                         this.rotateRight(node);
@@ -331,82 +280,6 @@ class Tree {
 
 }
 
-class Draw{
-    constructor(){
-        this.mainDiv = document.getElementById("spaned");
-        this.moveHeight = 115;
-        this.moveSides = document.body.clientWidth;
-        this.exp = 0;
-        this.flag=false; 
-        this.current=this.moveSides;
-    }
-    DrawBFS(DaRoot){
-        //console.log(DaRoot);
-
-        if (DaRoot!=null){
-            let myQueue = new Queue();
-            myQueue.push_(DaRoot);
-            this.BFSrecursive(myQueue);
-        }
-        this.moveHeight = 115;
-    }
-    BFSrecursive(myQueue){
-        if (myQueue.empty()==true){
-            return;
-        }
-        let node = myQueue.front();
-        let newDiv = document.createElement("div");
-        let text =  document.createElement("p");
-        text.innerText = node.getValue();
-        text.style.textAlign="center";
-        newDiv.classList.add("dot");
-        newDiv.style.backgroundColor = node.getColor()==true ? "red":"silver";
-        newDiv.style.position = "absolute";
-        newDiv.appendChild(text);
-        newDiv.style.top = this.moveHeight+"px";
-        //console.log(node.getValue(), node.getHeight(), node.getPositionInLevel())
-        if (node.getHeight()!=0 && node.getPositionInLevel()==0){
-            newDiv.style.left = ((this.moveSides/(Math.pow(2, node.getHeight())+1)))+"px";
-        }
-        else if (node.getHeight()!=0){
-            newDiv.style.left =(this.moveSides/(Math.pow(2,node.getHeight())+1) + node.getPositionInLevel()*this.moveSides/(Math.pow(2,node.getHeight())+1))+"px";
-        }
-        else{
-            newDiv.style.left = this.moveSides/2+"px";
-        }
-        node.x = newDiv.style.left;
-        node.y = newDiv.style.top;
-        main.appendChild(newDiv);
-        //document.body.insertBefore(newDiv, this.mainDiv);
-        if (node.getHeight()!=0){
-            this.createLine(node);
-        }
-        myQueue.pop_();
-        if (myQueue.front().getHeight()>node.getHeight() || node.getHeight() == 0){
-            this.moveHeight+=175;
-        }
-        if (node.getLeftSon()!=null){
-            myQueue.push_(node.getLeftSon());
-        }
-        if (node.getRightSon()!=null){
-            myQueue.push_(node.getRightSon());
-        }
-        this.BFSrecursive(myQueue);
-    }
-    createLine(node){
-        let svg = document.getElementById("svg");
-        let line = document.getElementById("myLine");
-        let newLine = line.cloneNode(true);
-        let x1 = node.getParent().x, y1 = node.getParent().y;
-        let x2 = node.x, y2 = node.y;
-        newLine.x1.baseVal.value = parseFloat(x1)+30; 
-        newLine.y1.baseVal.value = parseFloat(y1)-100;
-        newLine.x2.baseVal.value = parseFloat(x2)+30; 
-        newLine.y2.baseVal.value = parseFloat(y2)-100;
-        svg.appendChild(newLine);
-    }
-}
-
 class Queue{
     constructor(topValue=null){
         this.top = new Node(topValue);
@@ -456,44 +329,10 @@ class Queue{
         }
         return new Node(-1);
     }
-
 }
-
 let tree = new Tree();
-let drawer = new Draw();
-let inserted = [];
+tree.insert(95);
+tree.insert(896);
+//tree.insert(968);
+console.log(tree);
 
-function mainF(value, DaTree){
-    console.log(value);
-    DaTree.insert(value);
-    console.log(DaTree);
-    //tree.setPositions(tree.root);
-    //tree.fixChildren(tree.root);
-}
-//mainF();
-//let b = document.getElementById("inputButton");
-function clicked(){
-    let text = document.getElementById("text").value;
-    //console.log(text);
-    mainF(text, tree);
-    tree.preOrder();
-    while (main.firstChild) {
-        main.removeChild(main.lastChild);
-    }
-    drawer.DrawBFS(tree.root);
-}
-const b = document.getElementById("inputButton");
-b.addEventListener("keyup", function(event) {
-    if (event.key === "Enter") {
-        clicked();
-    }
-});
-
-
-
-</script>
-
-
-
-</body>
-</html>
