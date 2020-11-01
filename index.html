@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+         .dot {
+        height: 50px;
+        width: 50px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        }
+        #svg{
+            position: absolute;
+            top:0;
+            left:0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <svg id="svg">
+        <line id="myLine" x1="0" y1="0" x2="0" y2="0" style="stroke:black; stroke-width:2px;"/>
+    </svg> 
+    <div id="spaned" style="position:absolute; left:80px; top:20px" class="dot"></div>
+<script type="text/javascript">
+class Node {
+    constructor(value, next=null){
+        this.value = value;
+        this.next = next;
+        this.leftSon = null;
+        this.rightSon = null;
+        this.parent = null;
+        this.red = false;
+        this.item = null;
+        this.x = null;
+        this.y = null;
+        this.height = 0;
+        this.positioInLevel = 0;
+    }
+    print() {
+        console.log(this.value);
+    }
+    setPositionInLevel(pos){
+        this.positioInLevel = pos;
+    }
+    getPositionInLevel(){
+        return this.positioInLevel;
+    }
+    setHeight(value){
+        this.height = value;
+    }
+    getHeight(){
+        return this.height;
+    }
+    setParent(node){
+        this.parent = node;
+    }
+    getParent(){
+        return this.parent;
+    }
+    setNext(node){
+        this.next = node;
+    }
+    getNext(){
+        return this.next;
+    }
+    setColor(color){
+        this.red = color;
+    }
+    getColor(){
+        return this.red;
+    }
+    setValue(value){
+        this.value = value;
+    }
+    getValue(){
+        return this.value;
+    }
+    setRightSon(node){
+        this.rightSon = node;
+    }
+    setLeftSon(node){
+        this.leftSon = node;
+    }
+    getRightSon(){
+        return this.rightSon;
+    }
+    getLeftSon(){
+        return this.leftSon;
+    }
+    comparable(value){
+        return this.value>value ? 1: this.value<value?-1:0;
+    }
+    setItem(){
+
+    }
+}
+
+class Tree {
+    constructor(DaRoot=null){
+        this.blackHeight = 1;
+        this.root = new Node(DaRoot);
+    }
+    insert(value){
+        if (this.root.getValue()===null){
+            this.root = new Node(value);
+            //drawer.createCircle(this.root);
+        }
+        else{
+            let newNode = new Node(value);
+            this.root = this.insertRecursive(this.root, newNode);
+            this.redBlackBalance(newNode);
+            this.root.setColor(false);
+            //console.log(newNode);
+            //drawer.createCircle(newNode);
+        }
+        this.root.setHeight(0); this.root.setPositionInLevel(0);
+        this.setHeights(this.root);
+        this.setPositions(this.root);
+        
+    }
+    setHeights(node){
+        if (node!=null){
+            this.setHeights(node.getLeftSon());
+            if (node!=this.root){
+                node.setHeight(node.getParent().getHeight() + 1);
+            }
+            this.setHeights(node.getRightSon());
+        }
+    }
+    setPositions(node){
+        if (node!=null){
+            this.setPositions(node.getLeftSon());
+            if (node!=this.root){
+                let pos = 2 * node.getParent().getPositionInLevel();
+                node.setPositionInLevel(node.getParent().getLeftSon()==node ? pos : pos+1);
+            }
+            this.setPositions(node.getRightSon());
+        }
+    }
+    insertRecursive(node, nodeToInsert){
+        if (node==null){
+            nodeToInsert.setColor(true);
+            return nodeToInsert;
+        }
+        if (node.comparable(nodeToInsert.getValue())>=0){
+            node.setLeftSon(this.insertRecursive(node.getLeftSon(), nodeToInsert));
+        }
+        else if (node.comparable(nodeToInsert.getValue())<0){
+            node.setRightSon(this.insertRecursive(node.getRightSon(), nodeToInsert));
+        }
+        nodeToInsert.setParent(this.getParent(this.root, nodeToInsert.getValue()));
+        return node;
+    }
+    getParent(node, value){
+        if (this.root.comparable(value)==0){
+            return this.root;
+        }
+        while (node!=null && node.getValue()!=value){
+            if (node.getLeftSon()!=null && node.getLeftSon().comparable(value)==0){return node;}
+            if (node.getRightSon()!=null && node.getRightSon().comparable(value)==0){return node;}
+            if (node.comparable(value)>0){
+                node = node.getLeftSon();
+            }
+            else{
+                node = node.getRightSon();
+            }
+        }
+        if (node==null){return null;}
+        return node;
+    }
+    rotateLeft(rootNode){
+        let temp1 = rootNode.getRightSon();
+        rootNode.setRightSon(temp1.getLeftSon());
+        if (temp1.getLeftSon()!=null){
+            temp1.getLeftSon().setParent(rootNode);
+        }
+        temp1.setParent(rootNode.getParent());
+        if (rootNode.getParent()==null){
+            this.root = temp1;
+        }
+        else if (rootNode == rootNode.getParent().getLeftSon()){
+            rootNode.getParent().setLeftSon(temp1);
+        }
+        else{
+            rootNode.getParent().setRightSon(temp1);
+        }
+        temp1.setLeftSon(rootNode);
+        rootNode.setParent(temp1);
+        
+    }
+    rotateRight(rootNode){
+        let temp1 = rootNode.getLeftSon();
+        rootNode.setLeftSon(temp1.getRightSon());
+        if (temp1.getRightSon()!=null){
+            temp1.getRightSon().setParent(rootNode);
+        }
+        temp1.setParent(rootNode.getParent());
+        if (rootNode.getParent()==null){
+            this.root = temp1;
+        }
+        else if (rootNode == rootNode.getParent().getLeftSon()){
+            rootNode.getParent().setLeftSon(temp1);
+        }
+        else{
+            rootNode.getParent().setRightSon(temp1);
+        }
+        temp1.setRightSon(rootNode);
+        rootNode.setParent(temp1);
+    }
+    redBlackBalance(node){
+        if (node == this.root){return;}
+        while (node.getParent().getColor()==true) {
+            let uncle = null;
+            let left = false;
+            if (node.getParent().getParent().getRightSon()==node.getParent()){
+                uncle = node.getParent().getParent().getLeftSon();
+                left = false;
+            }
+            else{
+                uncle = node.getParent().getParent().getRightSon();
+                left = true;
+            }
+
+            if (uncle!=null && uncle.getColor()){
+                node.getParent().setColor(false);
+                uncle.setColor(false);
+                node.getParent().getParent().setColor(true);
+                node = node.getParent().getParent();
+            }
+            else{
+                if (left){
+                    if (node == node.getParent().getRightSon()){
+                        node = node.getParent();
+                        this.rotateLeft(node);
+                    }
+                    node.getParent().setColor(false);
+                    node.getParent().getParent().setColor(true);
+                    this.rotateRight(node.getParent().getParent());
+                }
+                else{
+                    if (node == node.getParent().getLeftSon()){
+                        node = node.getParent();
+                        this.rotateRight(node);
+                    }
+                    node.getParent().setColor(false);
+                    node.getParent().getParent().setColor(true);
+                    this.rotateLeft(node.getParent().getParent());
+                }
+            }
+            
+            if (node ==this.root){break;}
+        }
+    }
+    preOrder(){
+        this.preOrdered(this.root);
+    }
+    preOrdered(node){
+        if (node!=null){
+            console.log(node.getValue(), node.getColor(), node.getHeight(),node.getPositionInLevel());
+            this.preOrdered(node.getLeftSon());
+            this.preOrdered(node.getRightSon());
+        }
+    }
+    BFS(){
+        if (this.root!=null){
+            let myQueue = new Queue();
+            myQueue.push_(this.root);
+            this.BFSrecursive(myQueue);
+        }
+    }
+    BFSrecursive(myQueue){
+        if (myQueue.empty()==true){
+            return;
+        }
+        let temp = myQueue.front();
+        //console.log(temp.getValue(), temp.getColor(), temp.getHeight(),temp.getPositionInLevel());
+        myQueue.pop_();
+        if (temp.getLeftSon()!=null){
+            myQueue.push_(temp.getLeftSon());
+        }
+        if (temp.getRightSon()!=null){
+            myQueue.push_(temp.getRightSon());
+        }
+        this.BFSrecursive(myQueue);
+    }
+}
+
+class Draw{
+    constructor(){
+        this.mainDiv = document.getElementById("spaned");
+        this.moveHeight = 15;
+        this.moveSides = document.body.clientWidth;
+        this.exp = 0;
+        this.flag=false; 
+        this.current=this.moveSides;
+    }
+
+    DrawBFS(DaRoot){
+        console.log(DaRoot);
+        if (DaRoot!=null){
+            let myQueue = new Queue();
+            myQueue.push_(DaRoot);
+            this.BFSrecursive(myQueue);
+            
+        }
+    }
+    BFSrecursive(myQueue){
+        if (myQueue.empty()==true){
+            return;
+        }
+        let node = myQueue.front();
+        let newDiv = document.createElement("div");
+        let text =  document.createElement("p");
+        text.innerText = node.getValue();
+        text.style.textAlign="center";
+        newDiv.classList.add("dot");
+        newDiv.style.backgroundColor = node.getColor()==true ? "red":"silver";
+        newDiv.style.position = "absolute";
+        newDiv.appendChild(text);
+        newDiv.style.top = this.moveHeight+"px";
+        newDiv.style.left = this.moveSides/2+"px";
+        console.log(node.getValue(), node.getHeight(), node.getPositionInLevel())
+        if (node.getHeight()!=0 && node.getPositionInLevel()==0){
+            newDiv.style.left = ((this.moveSides/(Math.pow(2, node.getHeight())+1)))+"px";
+        }
+        else if (node.getHeight()!=0){
+            newDiv.style.left =(this.moveSides/(Math.pow(2,node.getHeight())+1) + node.getPositionInLevel()*this.moveSides/(Math.pow(2,node.getHeight())+1))+"px";
+        }
+        node.x = newDiv.style.left;
+        node.y = newDiv.style.top;
+        document.body.insertBefore(newDiv, this.mainDiv);
+        if (node.getHeight()!=0){
+            this.createLine(node);
+        }
+        myQueue.pop_();
+        //console.log(node.getHeight(), myQueue.front().getHeight())
+        if (myQueue.front().getHeight()>node.getHeight() || node.getHeight() == 0){
+            this.moveHeight+=150;
+        }
+        if (node.getLeftSon()!=null){
+            myQueue.push_(node.getLeftSon());
+        }
+        if (node.getRightSon()!=null){
+            myQueue.push_(node.getRightSon());
+        }
+        this.BFSrecursive(myQueue);
+    }
+    createLine(node){
+        let svg = document.getElementById("svg");
+        let line = document.getElementById("myLine");
+        let newLine = line.cloneNode(true);
+        let x1 = node.getParent().x, y1 = node.getParent().y;
+        let x2 = node.x, y2 = node.y;
+        newLine.x1.baseVal.value = parseFloat(x1)+30; 
+        newLine.y1.baseVal.value = parseFloat(y1);
+        newLine.x2.baseVal.value = parseFloat(x2)+30; 
+        newLine.y2.baseVal.value = parseFloat(y2);
+        svg.appendChild(newLine);
+    }
+}
+
+class Queue{
+    constructor(topValue=null){
+        this.top = new Node(topValue);
+        this.top.setNext(this.top);    
+    }
+    push_(node){
+        if (this.top!=null){
+            let temp = this.top;
+            while (temp.getNext()!=this.top) {
+                temp = temp.getNext();
+            }
+            node.setNext(this.top);
+            temp.setNext(node);
+        }
+        else{
+            this.top = node;
+            this.top.setNext(this.top);
+        }
+    }
+    pop_(){
+        if (this.top==null){
+            return new Node(-1);
+        }
+        let popped = this.top;
+        let temp = this.top.getNext();
+        if (temp == this.top){
+            this.top = null;
+        }
+        else{
+            while (temp.getNext()!=this.top) {
+                temp = temp.getNext();
+            }
+            this.top = this.top.getNext();
+            temp.setNext(this.top);
+        }
+        return popped;
+    }
+    empty(){
+        if (this.top!=null){
+            return false;
+        }
+        return true;
+    }
+    front(){
+        if (this.top!=null){
+            return this.top;
+        }
+        return new Node(-1);
+    }
+
+}
+
+
+let tree = new Tree();
+let drawer = new Draw();
+let inserted = [];
+for (let i = 0; i < 50; i++) {
+    let rand = Math.floor(Math.random() * 1000);
+    if (inserted.includes(rand)){
+        rand = Math.floor(Math.random() * 1000);
+    }
+    inserted.push(rand);
+    console.log(rand);
+    tree.insert(rand);
+    tree.setPositions(tree.root);
+}
+console.log("\nPre");
+tree.preOrder();
+drawer.DrawBFS(tree.root);
+console.log(tree);
+
+</script>
+
+
+
+</body>
+</html>
