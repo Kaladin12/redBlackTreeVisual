@@ -477,10 +477,10 @@ class Draw{
         newDiv.appendChild(text);
         newDiv.style.top = node.y;
         newDiv.style.left = node.x;
-        newDiv.style.borderColor = color;
-        newDiv.style.borderRadius="20%"
-        await sleep(500);
-        newDiv.style.borderColor = "black";
+        newDiv.style.backgroundColor = color;
+        main.appendChild(newDiv);
+        await sleep(1000);
+        newDiv.style.backgroundColor = (await node.getColor())==true?"red":"black";
     }
 
 }
