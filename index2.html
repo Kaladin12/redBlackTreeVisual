@@ -450,21 +450,23 @@ class Draw{
     }
     async createLine(node, isFirst){
         let svg = document.getElementById("svg");
+        let classSvg = document.getElementsByClassName("svg")
+        let newSvg = svg.cloneNode(true);
+        if (isFirst){
+            classSvg.empty();
+        }
         let line = document.getElementById("myLine");
         let newLine = line.cloneNode(true);
-        if (isFirst){
-            svg.childNodes.forEach(element => {
-                element.style.stroke = "white";
-            });
-        }
         let parent = await node.getParent();
         let x1 = parent.x, y1 =parent.y;
         let x2 = node.x, y2 = node.y;
+
         newLine.x1.baseVal.value = parseFloat(x1)+30; 
         newLine.y1.baseVal.value = parseFloat(y1)-100;
         newLine.x2.baseVal.value = parseFloat(x2)+30; 
         newLine.y2.baseVal.value = parseFloat(y2)-100;
-        svg.appendChild(newLine);
+        newSvg.appendChild(newLine);
+        main.appendChild(newSvg);
     }
     async borderColor(node, color){
         let newDiv = document.createElement("div");
@@ -480,7 +482,7 @@ class Draw{
         newDiv.style.backgroundColor = color;
         main.appendChild(newDiv);
         await sleep(1000);
-        newDiv.style.backgroundColor = (await node.getColor())==true?"red":"black";
+        newDiv.style.backgroundColor = (await node.getColor())==true?"red":"silver";
     }
 
 }
