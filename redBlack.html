@@ -1,9 +1,10 @@
+<!--Hecho por Elian Javier Cruz Esquivel--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Red Black Tree Visualizer</title>
     <style>
          .dot {
         height: 50px;
@@ -25,10 +26,11 @@
     </style>
 </head>
 <body>
-    <div><form action="#" method="" name="b" id="but">
+    <div>
         <input type="text" name = "text" id = "text" value="" />
         <input type="button" name="inputButton" id="inputButton" value="Insert" onclick="clicked()"/>
-    </form></div>
+        <p>No introducir números dobles.</p>
+    </div>
     <div id="main" > </div><svg id="svg">
         <line id="myLine" x1="0" y1="0" x2="0" y2="0" style="stroke:black; stroke-width:2px;"/>
     </svg>
@@ -326,7 +328,7 @@ class Tree {
                     await this.rotateLeft(grandZwei);
                 }
             }
-            //await this.drawer.DrawBFS(node); 
+            await this.drawer.DrawBFS(this.root); 
             //await this.drawer.DrawBFS(node); 
             if (node ==this.root){break;}
 
@@ -379,7 +381,25 @@ class Tree {
         //this.setHeights(this.root);
         this.setPositions(this.root);
     }
-
+    async callSearch(value){
+        let res = await this.search(this.root, value);
+        return res;
+    }
+    async search(node, value){
+        while(node!=null && (await node.getValue())!=null && (await node.getValue())!=value){
+            let val = await node.getValue();
+            if ((await (node.comparable(value)))>0){
+                node = await node.getLeftSon();
+            }
+            else{
+                node = await node.getRightSon();
+            }
+        }
+        if (node==null){
+            return null;
+        }
+        return node;
+    }
 }
 
 class Draw{
@@ -547,25 +567,30 @@ class Queue{
     let inserted = [];
     
     async function mainF(value, DaTree, toDraw){
-        //console.log(value);
         await DaTree.insert(value, toDraw);
-        //console.log("tree", DaTree);
-        //tree.setPositions(tree.root);
-        //tree.fixChildren(tree.root);
     }
     async function clicked(){
         let text = document.getElementById("text").value;
-        //console.log(drawer.moveHeight);
-        await mainF(text, tree, drawer);
-        console.log("treeClick",tree);
-        //await sleep(500);
-        //tree.preOrder();
-        //await drawer.DrawBFS(tree.root);
+        let isValid = await tree.callSearch(text);
+        if(isValid==null || (await isValid.getValue()==null) || tree.root==null){
+            await mainF(text, tree, drawer);
+            console.log("treeClick",tree);
+        }
+        else{
+            alert("No números repetidos!")
+        }
+        
     }
     const b = document.getElementById("inputButton");
     b.addEventListener("keyup", function(event) {
         if (event.key === "Enter") {
             clicked();
+        }
+    });
+    document.getElementById("text").addEventListener("keyup", function(event) {
+        event.preventDefault();
+        if (event.keyCode === 13) {
+            document.getElementById("inputButton").click();
         }
     });
     </script>
