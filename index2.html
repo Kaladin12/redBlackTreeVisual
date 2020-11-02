@@ -123,27 +123,30 @@ class Tree {
         this.blackHeight = 1;
         this.root =new Node(DaRoot);
     }
-    async insert(value){
+    async insert(value, drawer){
+        this.drawer = drawer;
         if ((await this.root.getValue())===null){
             this.root =new Node(value);
-            //drawer.createCircle(this.root);
         }
         else{
             let newNode = new Node(value);
-            console.log("newN",newNode);
             this.root = await this.insertRecursive(this.root, newNode);
-            console.log("recursiveRoot", this.root);
             await sleep(250);
             await this.redBlackBalance(newNode);
+            await sleep(250);
             await this.root.setColor(false);
-            //console.log(newNode);
-            //drawer.createCircle(newNode);
         }
         await this.root.setHeight(0); await this.root.setPositionInLevel(0);
         await this.setHeights(this.root);
         await this.setPositions(this.root);
         await this.setHeights(this.root);
-        await this.setPositions(this.root);        
+        await this.setPositions(this.root);  
+        while (main.firstChild) {
+            main.removeChild(main.lastChild);
+        }
+        await sleep(500);
+        await this.drawer.DrawBFS(this.root); 
+        await sleep(500);     
     }
     async setHeights(node){
         if (node!=null){
@@ -178,7 +181,7 @@ class Tree {
             await nodeToInsert.setColor(true);
             return nodeToInsert;
         }
-        //console.log(node.getValue(),nodeToInsert.getValue() , node.comparable(nodeToInsert.getValue()));
+        await this.drawer.borderColor(node,"teal");
         let val = await nodeToInsert.getValue();
         let comp = await node.comparable(val);
         if (comp>=0){
@@ -191,8 +194,8 @@ class Tree {
         }
         let parent = await this.getParent(this.root, (await nodeToInsert.getValue()));
         await nodeToInsert.setParent(parent);
-        await sleep(50);
-        console.log("Parent: ",parent);
+        await sleep(100);
+        await this.drawer.DrawBFS(this.root); 
         return node;
     }
     async getParent(node, value){
@@ -200,7 +203,6 @@ class Tree {
             return this.root;
         }
         while (node!=null){
-            //let v = await node.getValue();
             if ((await node.getValue())!=value){
                 if ((await node.getLeftSon())!=null ){
                     let lft = await node.getLeftSon();
@@ -213,7 +215,7 @@ class Tree {
                         return node;
                     }
                 }
-                if ((await node.comparable(value))>0){
+                if ((await node.comparable(value))>=0){
                     node = await node.getLeftSon();
                 }
                 else{
@@ -243,8 +245,9 @@ class Tree {
             await par.setRightSon(temp1);
         }
         await temp1.setLeftSon(rootNode);
-        await rootNode.setParent(temp1);
-        
+        await rootNode.setParent(temp1);    
+        await sleep(250);
+        //await this.drawer.DrawBFS(temp1);     
     }
     async rotateRight(rootNode){
         let temp1 = await rootNode.getLeftSon();
@@ -258,18 +261,19 @@ class Tree {
         if (par==null){
             this.root = temp1;
         }
-        else if (rootNode == (await par.getLeftSon())){
-            await par.setLeftSon(temp1);
+        else if (rootNode == (await par.getRightSon())){
+            await par.setRightSon(temp1);
         }
         else{
-            await par.setRightSon(temp1);
+            await par.setLeftSon(temp1);
         }
         await temp1.setRightSon(rootNode);
         await rootNode.setParent(temp1);
+        await sleep(250);
+        //await this.drawer.DrawBFS(temp1); 
     }
     async redBlackBalance(node){
         if (node == this.root){return;}
-        console.log(node);
         let daddy = await node.getParent();
         let daddyColor = await daddy.getColor();
         while (daddyColor==true) {
@@ -284,47 +288,51 @@ class Tree {
                 uncle = await grand.getRightSon();
                 left = true;
             }
-
             if (uncle!=null && (await uncle.getColor())){
                 let par = await node.getParent();
-                await par.setColor(false);
-                //node.getParent().setColor(false);
-                await uncle.setColor(false);
+                await sleep(250);
+                await par.setColor(false);await sleep(250);
+                await uncle.setColor(false);await sleep(250);
                 await grand.setColor(true);
                 node = grand;
             }
             else{
                 if (left){
-                    console.log("Changes");
                     let parent = await node.getParent();
                     if (node == (await parent.getRightSon())){
-                        node = await node.getParent();
+                        node = await node.getParent();await sleep(500);
                         await this.rotateLeft(node);
+
                     }
                     parent = await node.getParent();
                     await parent.setColor(false);
                     let grandZwei = await node.getParent(); grandZwei = await grandZwei.getParent();
-                    await grandZwei.setColor(true);
+                    await grandZwei.setColor(true); await sleep(500);
                     await this.rotateRight(grandZwei);
+                   
                 }
                 else{
-                    console.log("Changes");
                     let parent = await node.getParent();
                     if (node == (await parent.getLeftSon())){
                         node = await node.getParent();
+                        await sleep(500);
                         await this.rotateRight(node);
                     }
                     parent = await node.getParent();
                     await parent.setColor(false);
                     let grandZwei = await node.getParent(); grandZwei = await grandZwei.getParent();
                     await grandZwei.setColor(true);
+                    await sleep(500);
                     await this.rotateLeft(grandZwei);
                 }
             }
-            
+            //await this.drawer.DrawBFS(node); 
+            //await this.drawer.DrawBFS(node); 
             if (node ==this.root){break;}
+
             daddy = await node.getParent();
             daddyColor = await daddy.getColor();
+            //
         }
     }
     preOrder(){
@@ -349,7 +357,6 @@ class Tree {
             return;
         }
         let temp = myQueue.front();
-        //console.log(temp.getValue(), temp.getColor(), temp.getHeight(),temp.getPositionInLevel());
         myQueue.pop_();
         if (temp.getLeftSon()!=null){
             myQueue.push_(temp.getLeftSon());
@@ -378,29 +385,25 @@ class Tree {
 class Draw{
     constructor(){
         this.mainDiv = document.getElementById("spaned");
-        this.moveHeight = 115;
+        this.moveHeight = 15;
         this.moveSides = document.body.clientWidth;
         this.exp = 0;
         this.flag=false; 
         this.current=this.moveSides;
     }
     async DrawBFS(DaRoot){
-        //console.log(DaRoot);
         if (DaRoot!=null){
             let myQueue = new Queue();
             await myQueue.push_(DaRoot);
-            //let front = await myQueue.front();
-            //console.log(front);
-            await this.BFSrecursive(myQueue);
+            await this.BFSrecursive(myQueue, true);
         }
-        this.moveHeight = 115;
+        this.moveHeight = 15;
     }
-    async BFSrecursive(myQueue){
-        if (myQueue.empty()==true){
+    async BFSrecursive(myQueue, isFirst){
+        if (await (myQueue.empty())==true){
             return;
         }
-        let node = myQueue.front();
-        console.log("node", node);
+        let node = myQueue.front();      
         let newDiv = document.createElement("div");
         let text =  document.createElement("p");
         text.innerText =await node.getValue();
@@ -411,7 +414,6 @@ class Draw{
         newDiv.appendChild(text);
         newDiv.style.top = this.moveHeight+"px";
         let hght = await node.getHeight();
-        //console.log(node.getValue(), node.getHeight(), node.getPositionInLevel())
         if (hght!=0 && (await node.getPositionInLevel())==0){
             newDiv.style.left = ((this.moveSides/(Math.pow(2, hght)+1)))+"px";
         }
@@ -423,54 +425,82 @@ class Draw{
         }
         node.x = newDiv.style.left;
         node.y = newDiv.style.top;
-        main.appendChild(newDiv);
-        //document.body.insertBefore(newDiv, this.mainDiv);
+        if (main!=null && newDiv.innerText!=""){
+            main.appendChild(newDiv);
+        }
         if (hght!=0){
-            //console.log(node);
-            await this.createLine(node);
+            //console.log(node)
+            if ((await node.getParent())!=null)
+                await this.createLine(node, isFirst);
         }
         await myQueue.pop_();
-        if (myQueue.front().getHeight()>hght || hght == 0 || myQueue.empty()){
+        let front = myQueue.front();
+        if ((await front.getHeight())>hght || hght == 0 ||  myQueue.empty()){
             this.moveHeight+=175;
         }
         if ((await node.getLeftSon())!=null){
-            await myQueue.push_((await node.getLeftSon()));
+            let lft = await node.getLeftSon();
+            await myQueue.push_(lft);
         }
         if ((await node.getRightSon())!=null){
-            await myQueue.push_((await node.getRightSon()));
+            let rgt = await node.getRightSon();
+            await myQueue.push_(rgt);
         }
-        await this.BFSrecursive(myQueue);
+        await this.BFSrecursive(myQueue, false);
     }
-    async createLine(node){
-        //console.log("NodeLine", node)
+    async createLine(node, isFirst){
         let svg = document.getElementById("svg");
         let line = document.getElementById("myLine");
         let newLine = line.cloneNode(true);
+        if (isFirst){
+            svg.childNodes.forEach(element => {
+                element.style.stroke = "white";
+            });
+        }
         let parent = await node.getParent();
         let x1 = parent.x, y1 =parent.y;
         let x2 = node.x, y2 = node.y;
-        console.log(x1,y1,x2,y2);
         newLine.x1.baseVal.value = parseFloat(x1)+30; 
         newLine.y1.baseVal.value = parseFloat(y1)-100;
         newLine.x2.baseVal.value = parseFloat(x2)+30; 
         newLine.y2.baseVal.value = parseFloat(y2)-100;
         svg.appendChild(newLine);
     }
+    async borderColor(node, color){
+        let newDiv = document.createElement("div");
+        let text =  document.createElement("p");
+        text.innerText =await node.getValue();
+        text.style.textAlign="center";
+        newDiv.classList.add("dot");
+        newDiv.style.backgroundColor = (await node.getColor())==true ? "red":"silver";
+        newDiv.style.position = "absolute";
+        newDiv.appendChild(text);
+        newDiv.style.top = node.y;
+        newDiv.style.left = node.x;
+        newDiv.style.borderColor = color;
+        newDiv.style.borderRadius="20%"
+        await sleep(500);
+        newDiv.style.borderColor = "black";
+    }
+
 }
 class Queue{
     constructor(topValue=null){
         this.top = new Node(topValue);
-        this.top.setNext(this.top);    
+        this.setNextHere();  
+    }
+    async setNextHere(){
+        await this.top.setNext(this.top);
     }
     async push_(node){
         if (this.top!=null){
             //let temp = this.top;
-            let nxt = await this.top.getNext();
-            while (nxt!=this.top) {
-                nxt = await nxt.getNext();
+            let temp = this.top;
+            while ((await temp.getNext())!=this.top) {
+                temp = await temp.getNext();
             }
             await node.setNext(this.top);
-            await nxt.setNext(node);
+            await temp.setNext(node);
         }
         else{
             this.top = node;
@@ -482,13 +512,13 @@ class Queue{
             return new Node(-1);
         }
         let popped = this.top;
-        let temp =await  this.top.getNext();
+        let temp = await this.top.getNext();
         if (temp == this.top){
             this.top = null;
         }
         else{
             while ((await temp.getNext())!=this.top) {
-                temp =await  temp.getNext();
+                temp = await  temp.getNext();
             }
             this.top = await this.top.getNext();
             await temp.setNext(this.top);
@@ -514,9 +544,9 @@ class Queue{
     let drawer = new Draw();
     let inserted = [];
     
-    async function mainF(value, DaTree){
+    async function mainF(value, DaTree, toDraw){
         //console.log(value);
-        await DaTree.insert(value);
+        await DaTree.insert(value, toDraw);
         //console.log("tree", DaTree);
         //tree.setPositions(tree.root);
         //tree.fixChildren(tree.root);
@@ -524,15 +554,11 @@ class Queue{
     async function clicked(){
         let text = document.getElementById("text").value;
         //console.log(drawer.moveHeight);
-        await mainF(text, tree);
+        await mainF(text, tree, drawer);
         console.log("treeClick",tree);
         //await sleep(500);
         //tree.preOrder();
-
-        while (main.firstChild) {
-            main.removeChild(main.lastChild);
-        }
-        await drawer.DrawBFS(tree.root);
+        //await drawer.DrawBFS(tree.root);
     }
     const b = document.getElementById("inputButton");
     b.addEventListener("keyup", function(event) {
@@ -541,8 +567,5 @@ class Queue{
         }
     });
     </script>
-       
-
-
 </body>
 </html>
